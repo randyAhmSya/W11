@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
+import 'package:async/async.dart';
 
 void main() {
   runApp(const MyApp());
@@ -64,6 +67,48 @@ class _futurePageState extends State<futurePage> {
     });
   }
 
+  late Completer completer;
+
+  Future getNumber() {
+    completer = Completer<int>();
+    calculate();
+    return completer.future;
+  }
+
+  Future calculate() async {
+    await Future.delayed(const Duration(seconds: 5));
+    completer.complete(42);
+    // throw Exception();
+  }
+
+  cacth(_) {
+    completer.completeError({});
+  }
+
+  void returnFG() {
+    final futures = Future.wait<int>([
+      returnOneAsync(),
+      returnTwoAsync(),
+      returnThreeAsync(),
+    ]);
+
+    futures.then((List<int> values) {
+      int total = values.fold(0, (sum, element) => sum + element);
+      setState(() {
+        result = total.toString();
+      });
+    }).catchError((error) {
+      setState(() {
+        result = "Error: $error";
+      });
+    });
+  }
+
+  Future returnerror() async {
+    await Future.delayed(const Duration(seconds: 2));
+    throw Exception('something terrible happend!');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,15 +124,39 @@ class _futurePageState extends State<futurePage> {
             const Spacer(),
             ElevatedButton(
               onPressed: () {
-                count();
-                setState(() {});
-                getData().then((value) {
-                  result = value.body.toString().substring(0, 450);
-                  setState(() {});
-                }).catchError((_) {
-                  result = 'an error occurred';
-                  setState(() {});
-                });
+                returnFG();
+                returnerror().then((value) {
+                  setState(() {
+                    result = 'succes';
+                  });
+                }).catchError((onError) {
+                  setState(() {
+                    result = onError.toString();
+                  });
+                }).whenComplete(() => print('complete'));
+                // count();
+                // setState(() {});
+                // getData().then((value) {
+                //   result = value.body.toString().substring(0, 450);
+                //   setState(() {});
+                // }).catchError((_) {
+                //   result = 'an error occurred';
+                //   setState(() {});
+                // });
+
+                // getNumber().then((value) {
+                //   setState(() {
+                //     result = value.toString();
+                //   });
+                // });
+
+                // getNumber().then((value) {
+                //   setState(() {
+                //     result = value.toString();
+                //   });
+                // }).catchError((e) {
+                //   result = 'An error occurred';
+                // });
               },
               child: const Text('GO!'),
             ),
